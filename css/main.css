@@ -1,0 +1,13 @@
+
+body {
+  min-height: 75rem;
+  /*padding-top: 4.5rem;*/
+}
+
+.btn-book {
+  width: 100px;
+}
+
+.btn-chapter {
+  width: 50px;
+}
