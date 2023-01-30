@@ -32,8 +32,6 @@ $( document ).ready(function() {
   }
 
   if (bookSelectTrigger.length) {
-    fnShowBooks();
-
     $( "#book" ).show();
     $( "#chapter" ).hide();
     $( "#text" ).hide();
@@ -52,6 +50,18 @@ $( document ).ready(function() {
     $( "#book" ).hide();
     $( "#chapter" ).show();
     $( "#text" ).hide();
+  }
+
+}).change(function(event) {
+
+  var versionSelectTrigger = findParent($(event.target), "#select_version");
+
+  if (versionSelectTrigger.length) {
+    let translation_name = $(event.target).val();
+    let data = $.parseJSON($(event.target).attr("data"));
+    fnShowBibleText (data, translation_name);
+
+    $("#select_version").val(translation_name);
   }
 
 });
@@ -90,7 +100,7 @@ function fnShowChapters (data) {
   html += "<h1 class='select-book'><a href='#'>" + BOOKS[book].name + "</a></h1>";
   html += "<div>";
   for(let i = 1; i <= chapters; i++) {
-    html += "<button class='btn btn-primary btn-chapter m-1' data='{\"book\":" + book +", \"chapter\": " + i + "}'>" + i + "</button>";
+    html += "<button class='btn btn-primary btn-chapter m-1' data='{\"book\":" + book + ", \"chapter\": " + i + "}'>" + i + "</button>";
     if (i % 10 === 0) {
       html += "</div><div>";
     }
@@ -101,26 +111,34 @@ function fnShowChapters (data) {
   $( "#chapter" ).append(html);
 }
 
-function fnShowBibleText (data) {
+function fnShowBibleText (data, translation_name='kjv') {
   let book = data.book;
   let chapter = data.chapter;
   
-  let bible_api_url = BIBLE_API + encodeURIComponent(BOOKS[book].name + ' ' + chapter);
+  let bible_api_url = BIBLE_API + encodeURIComponent(BOOKS[book].name + ' ' + chapter) + '?translation=' + translation_name;
 
-  let html = '';
-  html += "<h1 class='select-chapter'><a href='#'>" + BOOKS[book].name + " " + chapter + "</a></h1>";
+  let html_header = '';
+  let html_body = '';
+
+  html_header += "<div class='float-end'><div class='input-group'><div class='input-group-prepend'><label class='input-group-text' for='select_version'>Bible Version</label></div><select id='select_version' data='{\"book\": " + book + ", \"chapter\": " + chapter + "}' class='form-select' aria-label='Bible version'><option value='kjv'>KJV</option><option value='web'>WEB</option><option value='bbe'>BBE</option></select></div></div>";
+  html_header += "<div class='clearfix'></div>"
+
+  $( "#text-header" ).children().remove();
+  $( "#text-header" ).append(html_header);
+
+  html_body += "<div class='float-none'><h1 class='select-chapter'><a href='#'>" + BOOKS[book].name + " " + chapter + "</a></h1></div>";
 
   $.getJSON(bible_api_url , function( data ) {
-    html += "<div class='text-body'>";
+    html_body += "<div class='text-body'>";
     $.each( data.verses, function( key, val ) {
-      html += "<div class='verse'><sup>" + val.verse + "</sup> <span>" + val.text + "</span></div>";
+      html_body += "<div class='verse'><sup>" + val.verse + "</sup> <span>" + val.text + "</span></div>";
     });
-    html += "</div>";
+    html_body += "</div>";
 
-    html += "<div class='pt-5 small'><div>" + data.translation_name + " (" + data.translation_id + ") -- " + data.translation_note + "</div><div>Data from: " + bible_api_url + "</div></div>";
+    html_body += "<div class='pt-5 small'><div>" + data.translation_name + " (" + data.translation_id + ") -- " + data.translation_note + "</div><div>Data from: " + bible_api_url + "</div></div>";
 
-    $( "#text" ).children().remove();
-    $( "#text" ).append(html);
+    $( "#text-body" ).children().remove();
+    $( "#text-body" ).append(html_body);
   });
 }
 
